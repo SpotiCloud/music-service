@@ -3,17 +3,20 @@ using Microsoft.EntityFrameworkCore;
 using MusicService.Data;
 using MusicService.Dtos.Song;
 using MusicService.Models;
+using MusicService.Services.Event;
 
 namespace MusicService.Services.Song
 {
     public class SongService : ISongService
     {
         private readonly IMapper _mapper;
+        private readonly IEventService _eventService;
         private readonly DataContext _context;
 
-        public SongService(IMapper mapper, DataContext context)
+        public SongService(IMapper mapper, IEventService eventService, DataContext context)
         {
             _mapper = mapper;
+            _eventService = eventService;
             _context = context;
         }
 
@@ -44,11 +47,11 @@ namespace MusicService.Services.Song
 
         public async Task<ServiceResponse<GetSongDto>> GetSong(int songId)
         {
-            ServiceResponse<GetSongDto>? response = new ServiceResponse<GetSongDto>();
+            ServiceResponse<GetSongDto> response = new ServiceResponse<GetSongDto>();
             try
             {
                 Models.Song? song = await _context.song
-                    .Where(b => b.Id == songId)
+                    .Where(s => s.Id == songId)
                     .FirstAsync();
 
                 if (song != null)
@@ -78,6 +81,8 @@ namespace MusicService.Services.Song
                 Models.Song song = _mapper.Map<Models.Song>(request);
                 _context.song.Add(song);
                 await _context.SaveChangesAsync();
+                var test = new { Id = song.Id, Name = song.Name };
+                _eventService.Publish(exchange: "song-exchange", topic: "song-added", test);
 
                 response.Data = _mapper.Map<GetSongDto>(song);
             }
@@ -114,9 +119,24 @@ namespace MusicService.Services.Song
             return response;
         }
 
-        public Task<ServiceResponse<GetSongDto>> DeleteSong(int songId)
+        public async Task<ServiceResponse<GetSongDto>> DeleteSong(int songId)
         {
-            throw new NotImplementedException();
+            ServiceResponse<GetSongDto> response = new ServiceResponse<GetSongDto>();
+
+            try
+            {
+                await _context.song.Where(s => s.Id == songId).ExecuteDeleteAsync();
+
+                response.Success = true;
+                response.Message = "Nothing was found!";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+
+            return response;
         }
     }
 }

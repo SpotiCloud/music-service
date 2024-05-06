@@ -10,7 +10,6 @@ namespace MusicService.Controllers
     [ApiController]
     public class SongController : ControllerBase
     {
-
         private readonly ISongService _songService;
 
         public SongController(ISongService songService)
@@ -18,13 +17,14 @@ namespace MusicService.Controllers
             _songService = songService;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("all")]
         public async Task<ActionResult<ServiceResponse<List<GetSongDto>>>> GetAllSongs()
         {
             var response = await _songService.GetAllSongs();
 
             if (response.Data == null)
-                return StatusCode(StatusCodes.Status404NotFound, response);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, response);
 
             return StatusCode(StatusCodes.Status200OK, response);
         }
@@ -35,7 +35,7 @@ namespace MusicService.Controllers
             var response = await _songService.GetSong(songId);
 
             if (response.Data == null)
-                return StatusCode(StatusCodes.Status404NotFound, response);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, response);
 
             return StatusCode(StatusCodes.Status200OK, response);
         }
@@ -43,12 +43,12 @@ namespace MusicService.Controllers
         [HttpPost]
         public async Task<ActionResult<ServiceResponse<GetSongDto>>> AddSong(AddSongDto request)
         {
-            var songResponse = await _songService.AddSong(request);
+            var response = await _songService.AddSong(request);
 
-            if (!songResponse.Success)
-                return StatusCode(StatusCodes.Status404NotFound, songResponse);
+            if (!response.Success)
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, response);
 
-            return StatusCode(StatusCodes.Status201Created, songResponse);
+            return StatusCode(StatusCodes.Status201Created, response);
         }
 
         [HttpPut]
@@ -57,20 +57,20 @@ namespace MusicService.Controllers
             var response = await _songService.UpdateSong(request);
 
             if (response.Data == null)
-                return StatusCode(StatusCodes.Status404NotFound, response);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, response);
 
             return StatusCode(StatusCodes.Status200OK, response);
         }
 
-        /*[HttpDelete("{songId}")]
+        [HttpDelete("{songId}")]
         public async Task<ActionResult<ServiceResponse<GetSongDto>>> DeleteSong(int songId)
         {
-            /*var response = await _songService;
+            var response = await _songService.DeleteSong(songId);
 
-            if (response.Data == null)
-                return StatusCode(StatusCodes.Status404NotFound, response);
+            if (!response.Success)
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, response);
 
-            return StatusCode(StatusCodes.Status200OK, response);
-        }*/
+            return StatusCode(StatusCodes.Status204NoContent, response);
+        }
     }
 }

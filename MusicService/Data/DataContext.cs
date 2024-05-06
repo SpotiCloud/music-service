@@ -6,7 +6,15 @@ namespace MusicService.Data
     public class DataContext : DbContext
     {
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-            => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=music;Username=postgres;Password=example");
+        {
+            IConfigurationRoot configuration = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json")
+                .Build();
+
+            optionsBuilder.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+        }
+            
 
         public DataContext()
         {
