@@ -9,6 +9,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 var services = builder.Services;
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("*",
+                                              "*");
+                      });
+});
+
 // Add authentication services
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {
@@ -122,6 +134,13 @@ services.AddScoped<ISongService, SongService>();
 services.AddSingleton<IEventService, EventService>();
 
 var app = builder.Build();
+
+app.UseCors(builder => builder
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
+
+//app.UseCors(MyAllowSpecificOrigins);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
