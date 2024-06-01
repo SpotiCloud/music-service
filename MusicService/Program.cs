@@ -4,12 +4,18 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using MusicService.Services.Event;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>();
+}
+
 var services = builder.Services;
 
-var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+/*var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 builder.Services.AddCors(options =>
 {
@@ -19,7 +25,7 @@ builder.Services.AddCors(options =>
                           policy.WithOrigins("*",
                                               "*");
                       });
-});
+});*/
 
 // Add authentication services
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
@@ -76,6 +82,10 @@ services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
 
 services.AddDbContext<DataContext>();
 // Add services to the container.
+
+services.AddDbContext<DataContext>(options =>
+    options.UseNpgsql(builder.Configuration["POSTGRES_CONNECTION_STRING"]));
+
 services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 services.AddEndpointsApiExplorer();
@@ -89,7 +99,7 @@ builder.Services.AddSwaggerGen(setup =>
         {
             Implicit = new OpenApiOAuthFlow
             {
-                AuthorizationUrl = new Uri("http://localhost:8080/realms/SpotiCloud/protocol/openid-connect/auth"),
+                AuthorizationUrl = new Uri("http://localhost:8180/realms/SpotiCloud/protocol/openid-connect/auth"),
             }
         }
     });
@@ -140,6 +150,11 @@ app.UseCors(builder => builder
     .AllowAnyMethod()
     .AllowAnyHeader());
 
+/*app.UseCors(builder => builder
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());*/
+
 //app.UseCors(MyAllowSpecificOrigins);
 
 // Configure the HTTP request pipeline.
@@ -159,5 +174,11 @@ app.UseAuthorization();
 });*/
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+    dbContext.Database.Migrate();
+}
 
 app.Run();

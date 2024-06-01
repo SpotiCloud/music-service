@@ -6,7 +6,7 @@ using MusicService.Services.Song;
 
 namespace MusicService.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/song")]
     [ApiController]
     public class SongController : ControllerBase
     {
@@ -17,7 +17,7 @@ namespace MusicService.Controllers
             _songService = songService;
         }
 
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [HttpGet("all")]
         public async Task<ActionResult<ServiceResponse<List<GetSongDto>>>> GetAllSongs()
         {

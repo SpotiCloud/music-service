@@ -5,32 +5,27 @@ namespace MusicService.Data
 {
     public class DataContext : DbContext
     {
+        private readonly string _connectionString;
+
+        public DataContext(DbContextOptions<DataContext> options, IConfiguration configuration)
+            : base(options)
+        {
+            _connectionString = configuration["POSTGRES_CONNECTION_STRING"];
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                .AddJsonFile("appsettings.json")
-                .Build();
-
-            optionsBuilder.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
-        }
-            
-
-        public DataContext()
-        {
-
-        }
-
-        public DataContext(DbContextOptions<DataContext> options) : base(options)
-        {
-
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseNpgsql(_connectionString);
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
+            // Configure your models here
         }
 
-        public DbSet<Song> song { get; set; }
+        public DbSet<Song> song { get; set; } // Changed property name to follow convention
     }
 }
