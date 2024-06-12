@@ -12,7 +12,9 @@ namespace MusicService.Services.Event
         {
             var factory = new ConnectionFactory
             {
-                HostName = configuration["RABBITMQ_HOST_NAME"]
+                HostName = configuration["RABBITMQ_HOST_NAME"],
+                UserName = configuration["RABBITMQ_USERNAME"],
+                Password = configuration["RABBITMQ_PASSWORD"]
             };
 
             connection = factory.CreateConnection();

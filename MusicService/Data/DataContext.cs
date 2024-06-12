@@ -10,7 +10,16 @@ namespace MusicService.Data
         public DataContext(DbContextOptions<DataContext> options, IConfiguration configuration)
             : base(options)
         {
-            _connectionString = configuration["POSTGRES_CONNECTION_STRING"];
+            string hostName = configuration["POSTGRES_HOST_NAME"];
+            string username = configuration["POSTGRES_USERNAME"];
+            string password = configuration["POSTGRES_PASSWORD"];
+
+            if (string.IsNullOrEmpty(hostName) || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            {
+                throw new ArgumentException("Database connection information is not fully configured.");
+            }
+
+            _connectionString = $"Host={hostName};Port=5432;Database=music;Username={username};Password={password}";
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
