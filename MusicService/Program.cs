@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using MusicService.Services.Event;
 using Microsoft.EntityFrameworkCore;
 using Prometheus;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,20 +23,23 @@ var services = builder.Services;
 // Add authentication services
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {
-
-    //authority runs behind reverse proxy
+    o.Authority = "http://localhost:8180/realms/SpotiCloud";
+    o.Audience = "test";
     o.RequireHttpsMetadata = false;
-
-    o.Authority = builder.Configuration["Jwt:Authority"];
-    o.Audience = builder.Configuration["Jwt:Audience"];
 
 
     o.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateAudience = false
+        ValidateIssuer = true,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ValidIssuer = "http://localhost:8180/realms/SpotiCloud",
+        ValidAudience = "test" 
     };
 
 });
+
+services.AddAuthorization();
 
 // Configure DbContext with environment variables
 services.AddDbContext<DataContext>(options =>

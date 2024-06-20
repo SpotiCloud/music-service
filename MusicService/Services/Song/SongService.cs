@@ -82,7 +82,7 @@ namespace MusicService.Services.Song
                 _context.song.Add(song);
                 await _context.SaveChangesAsync();
                 var artist = new { SongId = song.Id, Name = request.ArtistName };
-                _eventService.Publish(exchange: "song-exchange", topic: "song-added", artist);
+                _eventService.Publish(exchange: "song-added-exchange", topic: "song-added", artist);
 
                 response.Data = _mapper.Map<GetSongDto>(song);
             }
@@ -127,10 +127,10 @@ namespace MusicService.Services.Song
             {
                 await _context.song.Where(s => s.Id == songId).ExecuteDeleteAsync();
 
-                _eventService.Publish(exchange: "song-exchange", topic: "song-deleted", songId);
+                _eventService.Publish(exchange: "song-deleted-exchange", topic: "song-deleted", songId.ToString());
 
                 response.Success = true;
-                response.Message = "Nothing was found!";
+                response.Message = "Item has been deleted!";
             }
             catch (Exception ex)
             {
